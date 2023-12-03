@@ -3,12 +3,20 @@ import datetime
 from collections import defaultdict
 import random
 import argparse
+import hashlib
 
 def generate_random_for_date(input_date):
     date_str = input_date.strftime("%Y-%m-%d")
     random.seed(date_str)
     random_number = random.random()
     return random_number
+
+def string_to_uniform_random_0_1(input_string):
+    hashed = hashlib.sha256(input_string.encode()).hexdigest()
+    decimal_hash = int(hashed, 16)
+    # Normalize the hash value to a float between 0 and 1
+    normalized_value = decimal_hash / (2**256 - 1)  # Maximum possible value for a SHA-256 hash
+    return normalized_value
 
 def get_current_week():
     today = datetime.datetime.combine(datetime.date.today(), datetime.datetime.min.time())
@@ -17,6 +25,12 @@ def get_current_week():
     return start_of_week, end_of_week
 
 def parse_schedules(schedules):
+    """
+        Split by spaces; then,
+        - The first 5 parts are the cron schedule
+        - The 6th part is the probability
+        - rest are the task name/description 
+    """
     parsed_schedules = {}
     for schedule in schedules:
         parts = schedule.split()
@@ -51,10 +65,12 @@ if __name__ == "__main__":
     start_date,_ = get_current_week()
     for days_delta in range(14):
         current_date = start_date + datetime.timedelta(days=days_delta)
-        P = generate_random_for_date(current_date)
-        print(f"""\n# {current_date.strftime("%a %Y-%m-%d").upper().strip()}""",P)
-
+        print(f"""\n# {current_date.strftime("%a %Y-%m-%d").upper().strip()}""")
         for task, schedule in parsed_schedules.items():
+            # Get a uniform random number for date and the task name
+            # This is done so that the schedule is consistent with the date and
+            # the task name. 
+            P = string_to_uniform_random_0_1(current_date.strftime("%Y-%m-%d")+task)
             if croniter.match(schedule['cron'], current_date) and P <= schedule['prob']:
                 print(f"  - [ ] {task}")
 
