@@ -2,7 +2,7 @@ from croniter import croniter
 import datetime
 from collections import defaultdict
 import random
-
+import argparse
 
 def generate_random_for_date(input_date):
     date_str = input_date.strftime("%Y-%m-%d")
@@ -30,37 +30,33 @@ def parse_schedules(schedules):
         }
     return parsed_schedules
 
+def read_file_ignore_comments(file_name):
+    with open(file_name, 'r') as file:
+        lines = file.readlines()
+        cleaned_lines = [line.strip() for line in lines if not line.strip().startswith('#')]
+        cleaned_lines = [line for line in cleaned_lines if line] # remove empty lines
+    return cleaned_lines
 
-SCHEDULES = [
-    # * * * * *
-    # | | | | |
-    # | | | | +---- Day of the week (0 - 7) (Sunday is 0 or 7, Monday is 1, and so on)
-    # | | | +------ Month (1 - 12)
-    # | | +-------- Day of the month (1 - 31)
-    # | +---------- Hour (0 - 23)
-    # +------------ Minute (0 - 59)
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Randomised Task Scheduler')
+    parser.add_argument('--file', type=str, default="example_schedule.txt", help='Name of the file to read')
 
-    "0 0 * * mon-sat 0.5 Yoga",
-    "0 0 * * mon-sat 0.5 Workout",
-    "0 0 * * mon-sat 0.166 Paper reading",
-    "0 0 * * mon-sat 0.166 Internal Document Reading",
-    "0 0 * * wed 1.0 Task 3",
-    "0 0 * * wed 0.5 Task 4",
-    "0 0 * * sat#1,sun#2 1.0 Task 5",
-    "0 0 * * 5#3,L5 1.0 Task 6",
-]
+    args = parser.parse_args()
 
-parsed_schedules = parse_schedules(SCHEDULES)
+    file_name = args.file
+    schedules = read_file_ignore_comments(file_name)
 
-start_date,_ = get_current_week()
-for days_delta in range(10):
-    current_date = start_date + datetime.timedelta(days=days_delta)
-    P = generate_random_for_date(current_date)
-    print(f"""\n# {current_date.strftime("%a %Y-%m-%d").upper().strip()}""",P)
+    parsed_schedules = parse_schedules(schedules)
 
-    for task, schedule in parsed_schedules.items():
-        if croniter.match(schedule['cron'], current_date) and P <= schedule['prob']:
-            print(f"  - [ ] {task}")
+    start_date,_ = get_current_week()
+    for days_delta in range(14):
+        current_date = start_date + datetime.timedelta(days=days_delta)
+        P = generate_random_for_date(current_date)
+        print(f"""\n# {current_date.strftime("%a %Y-%m-%d").upper().strip()}""",P)
+
+        for task, schedule in parsed_schedules.items():
+            if croniter.match(schedule['cron'], current_date) and P <= schedule['prob']:
+                print(f"  - [ ] {task}")
 
 
     

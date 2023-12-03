@@ -1,0 +1,16 @@
+# * * * * *
+# | | | | |
+# | | | | +---- Day of the week (0 - 7) (Sunday is 0 or 7, Monday is 1, and so on)
+# | | | +------ Month (1 - 12)
+# | | +-------- Day of the month (1 - 31)
+# | +---------- Hour (0 - 23)
+# +------------ Minute (0 - 59)
+
+0 0 * * mon-sat 0.5 Task 1
+0 0 * * mon-sat 0.5 Task 2
+0 0 * * mon-sat 0.166 Task 3
+0 0 * * mon-sat 0.166 Task 4
+0 0 * * wed 1.0 Task 5
+0 0 * * wed 0.5 Task 6
+0 0 * * sat#1,sun#2 1.0 Task 7
+0 0 * * 5#3,L5 1.0 Task 8
